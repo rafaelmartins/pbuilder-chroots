@@ -1,0 +1,21 @@
+name: yatr
+on:
+  - push
+  - workflow_dispatch
+
+jobs:
+  yatr:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Check out scripts
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: sudo apt install -y cowbuilder debian-archive-keyring
+
+      - name: Run yatr
+        env:
+          TARGET: "dist-linux-amd64"
+          DISTFILES_URL: "${{ secrets.DISTFILES_URL }}"
+        run: curl -sSf https://yatr.rgm.io/run.sh | bash
