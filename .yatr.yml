@@ -4,4 +4,4 @@ default_configure_args:
 targets:
     dist-linux-amd64:
         task_script: run.sh
-        archive_filter: "pbuilder-chroot-*.tar.xz"
+        archive_filter: "pbuilder-chroots-*.tar.xz"
