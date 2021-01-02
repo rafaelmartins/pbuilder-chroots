@@ -23,6 +23,8 @@ for i in ${DEBIAN_DISTS}; do
         -cJf "${BUILDDIR}/pbuilder-chroot-${i}-${ARCH}-${PV}.tar.xz" \
         -C "${BUILDDIR}/pbuilder" \
         .
+
+    sudo rm -rf "${BUILDDIR}/pbuilder/${i}-${ARCH}"
 done
 
 for i in ${UBUNTU_DISTS}; do
@@ -38,4 +40,6 @@ for i in ${UBUNTU_DISTS}; do
         -cJf "${BUILDDIR}/pbuilder-chroot-${i}-${ARCH}-${PV}.tar.xz" \
         -C "${BUILDDIR}/pbuilder" \
         .
+
+    sudo rm -rf "${BUILDDIR}/pbuilder/${i}-${ARCH}"
 done
