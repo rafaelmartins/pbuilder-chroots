@@ -2,6 +2,6 @@ default_configure_args:
     - version-date
 
 targets:
-    dist-linux-amd64:
+    dist-amd64:
         task_script: run.sh
-        archive_filter: "pbuilder-chroots-*.tar.xz"
+        archive_filter: "pbuilder-chroot-*.tar.xz"

@@ -5,23 +5,37 @@ set -exo pipefail
 DEBIAN_DISTS="buster bullseye sid"
 UBUNTU_DISTS="focal groovy"
 
+ARCH="$(echo "${TARGET}" | cut -d- -f2)"
+
+sudo rm -rf "${BUILDDIR}/pbuilder"
+
 for i in ${DEBIAN_DISTS}; do
-    mkdir -p "${SRCDIR}/pbuilder/${i}-amd64"
+    mkdir -p "${BUILDDIR}/pbuilder/${i}-${ARCH}"
+
     sudo cowbuilder \
         --create \
         --mirror http://deb.debian.org/debian/ \
-        --basepath "${SRCDIR}/pbuilder/${i}-amd64/base.cow" \
+        --basepath "${BUILDDIR}/pbuilder/${i}-${ARCH}/base.cow" \
         --distribution "${i}"
+
+    sudo tar \
+        --checkpoint=1000 \
+        -cJf "${BUILDDIR}/pbuilder-chroot-${i}-${ARCH}-${PV}.tar.xz" \
+        -C "${BUILDDIR}/pbuilder" \
+        .
 done
 
 for i in ${UBUNTU_DISTS}; do
-    mkdir -p "${SRCDIR}/pbuilder/${i}-amd64"
+    mkdir -p "${BUILDDIR}/pbuilder/${i}-${ARCH}"
+
     sudo cowbuilder \
         --create \
-        --basepath "${SRCDIR}/pbuilder/${i}-amd64/base.cow" \
+        --basepath "${BUILDDIR}/pbuilder/${i}-${ARCH}/base.cow" \
         --distribution "${i}"
-done
 
-pushd "${SRCDIR}" > /dev/null
-sudo tar -cJf "${BUILDDIR}/${PN}-${TARGET/dist-/}-${PV}.tar.xz" pbuilder
-popd > /dev/null
+    sudo tar \
+        --checkpoint=1000 \
+        -cJf "${BUILDDIR}/pbuilder-chroot-${i}-${ARCH}-${PV}.tar.xz" \
+        -C "${BUILDDIR}/pbuilder" \
+        .
+done
