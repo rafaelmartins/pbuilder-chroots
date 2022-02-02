@@ -2,8 +2,8 @@
 
 set -exo pipefail
 
-DEBIAN_DISTS="buster bullseye bookworm sid"
-UBUNTU_DISTS="focal hirsute"
+DEBIAN_DISTS="bullseye bookworm sid"
+UBUNTU_DISTS="focal impish"
 
 ARCH="$(echo "${TARGET}" | cut -d- -f2)"
 
