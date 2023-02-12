@@ -3,7 +3,7 @@
 set -exo pipefail
 
 DEBIAN_DISTS="bullseye bookworm sid"
-UBUNTU_DISTS="focal kinetic"
+UBUNTU_DISTS="focal jammy kinetic"
 
 ARCH="$(echo "${TARGET}" | cut -d- -f2)"
 
