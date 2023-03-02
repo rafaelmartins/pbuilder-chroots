@@ -1,0 +1,135 @@
+name: Build pbuilder chroots
+on:
+  - push
+  - workflow_dispatch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linux-amd64
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  pre-build:
+    name: Gather build metadata
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get build version
+        run: date -u +'%Y%m%d%H%M' > VERSION
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: VERSION
+          path: VERSION
+
+  build:
+    name: Build pbuilder chroot for ${{ matrix.distro }}
+    runs-on: ubuntu-22.04
+    needs: pre-build
+
+    strategy:
+      matrix:
+        distro:
+          - "debian_bullseye_11"
+          - "debian_bookworm_12"
+          - "debian_sid"
+          - "ubuntu_focal_11.0"
+          - "ubuntu_jammy_12.0"
+          - "ubuntu_kinetic_12.1"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: VERSION
+
+      - name: Get build version
+        run: |
+          echo "ARCH=amd64" >> $GITHUB_ENV
+          echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: sudo apt install -y cowbuilder debian-archive-keyring
+
+      - name: Create chroot
+        run: |
+          if [[ x${{ matrix.distro }} = xdebian_* ]]; then
+            ISDEBIAN=1
+          fi
+
+          DIST="$(echo "${{ matrix.distro }}" | cut -d_ -f2)"
+          BUILDDIR="$(pwd)/${DIST}-${ARCH}"
+          RESULTDIR="$(pwd)/result"
+
+          mkdir -p "${BUILDDIR}" "${RESULTDIR}"
+
+          sudo cowbuilder \
+            --create \
+            ${ISDEBIAN:+--mirror http://deb.debian.org/debian/} \
+            --basepath "${BUILDDIR}/base.cow" \
+            --distribution "${DIST}"
+
+          sudo echo "${{ matrix.distro }}" > "${BUILDDIR}/DISTRO"
+
+          sudo tar \
+            --checkpoint=1000 \
+            -cJf "${RESULTDIR}/pbuilder-chroot-${{ matrix.distro }}-${ARCH}-${VERSION}.tar.xz" \
+            -C "${BUILDDIR}" \
+            .
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ matrix.distro }}-${{ env.ARCH }}-${{ env.VERSION }}"
+          path: result/**
+
+  metadata:
+    name: Produce release metadata
+    runs-on: ubuntu-22.04
+    needs: build
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: Generate DISTROS
+        run: for i in **/*.tar.xz; do echo "$(basename "${i}")" | cut -d- -f3; done > DISTROS
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: DISTROS
+          path: DISTROS
+
+  deploy:
+    name: Create release
+    runs-on: ubuntu-22.04
+    needs: metadata
+    environment: releases
+
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: Get release name
+        id: name
+        run: echo "name=pbuilder-chroots-amd64-$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            VERSION
+            DISTROS
+            **/*.tar.xz
+          tag: ${{ steps.name.outputs.name }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          removeArtifacts: true
