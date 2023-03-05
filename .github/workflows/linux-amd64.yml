@@ -88,6 +88,12 @@ jobs:
             -C "${BUILDDIR}" \
             .
 
+          pushd "${RESULTDIR}" > /dev/null
+          sha512sum \
+            "pbuilder-chroot-${{ matrix.distro }}-${ARCH}-${VERSION}.tar.xz" \
+            > "pbuilder-chroot-${{ matrix.distro }}-${ARCH}-${VERSION}.tar.xz.sha512"
+          popd > /dev/null
+
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ matrix.distro }}-${{ env.ARCH }}-${{ env.VERSION }}"
@@ -128,7 +134,7 @@ jobs:
           artifacts: |
             VERSION/VERSION
             DISTROS/DISTROS
-            **/*.tar.xz
+            **/*.tar.xz*
           tag: ${{ steps.name.outputs.name }}
           commit: ${{ github.sha }}
           allowUpdates: true
