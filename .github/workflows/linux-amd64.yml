@@ -120,14 +120,14 @@ jobs:
 
       - name: Get release name
         id: name
-        run: echo "name=pbuilder-chroots-amd64-$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: echo "name=pbuilder-chroots-amd64-$(cat VERSION/VERSION)" >> $GITHUB_OUTPUT
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            VERSION
-            DISTROS
+            VERSION/VERSION
+            DISTROS/DISTROS
             **/*.tar.xz
           tag: ${{ steps.name.outputs.name }}
           commit: ${{ github.sha }}
