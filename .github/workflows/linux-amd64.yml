@@ -40,12 +40,12 @@ jobs:
     strategy:
       matrix:
         distro:
-          - "debian_bullseye_11"
           - "debian_bookworm_12"
+          - "debian_trixie_13"
           - "debian_sid"
           - "ubuntu_focal_11.0"
           - "ubuntu_jammy_12.0"
-          - "ubuntu_kinetic_12.1"
+          - "ubuntu_lunar_12.2"
 
     steps:
       - uses: actions/checkout@v3
