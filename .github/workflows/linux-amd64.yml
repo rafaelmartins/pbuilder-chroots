@@ -113,7 +113,7 @@ jobs:
       - name: Generate DISTROS.json
         run: |
           json="$(jq -cM --raw-input --slurp 'split("\n") | map(select(. != ""))' DISTROS)"
-          echo "{\"distro\":${json}" > DISTROS.json
+          echo "{\"distro\":${json}}" > DISTROS.json
 
       - uses: actions/upload-artifact@v3
         with:
