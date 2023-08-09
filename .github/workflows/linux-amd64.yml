@@ -110,10 +110,15 @@ jobs:
       - name: Generate DISTROS
         run: for i in **/*.tar.xz; do echo "$(basename "${i}")" | cut -d- -f3; done > DISTROS
 
+      - name: Generate DISTROS.json
+        run: |
+          json="$(jq -cM --raw-input --slurp 'split("\n") | map(select(. != ""))' DISTROS)"
+          echo "{\"distro\":${json}" > DISTROS.json
+
       - uses: actions/upload-artifact@v3
         with:
           name: DISTROS
-          path: DISTROS
+          path: DISTROS*
 
   deploy:
     name: Create release
@@ -133,7 +138,7 @@ jobs:
         with:
           artifacts: |
             VERSION/VERSION
-            DISTROS/DISTROS
+            DISTROS/DISTROS*
             **/*.tar.xz*
           tag: ${{ steps.name.outputs.name }}
           commit: ${{ github.sha }}
